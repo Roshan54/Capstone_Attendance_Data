@@ -1,0 +1,50 @@
+-- Create database
+CREATE DATABASE student_attendance;
+
+-- Use database
+USE student_attendance;
+
+-- Create table for students
+CREATE TABLE students (
+  student_id INT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  class_id INT NOT NULL,
+  FOREIGN KEY (class_id) REFERENCES classes(class_id)
+);
+
+-- Create table for classes
+CREATE TABLE classes (
+  class_id INT PRIMARY KEY,
+  class_name VARCHAR(100) NOT NULL
+);
+
+-- Create table for attendance
+CREATE TABLE attendance (
+  attendance_id INT PRIMARY KEY AUTO_INCREMENT,
+  student_id INT NOT NULL,
+  class_id INT NOT NULL,
+  date DATE NOT NULL,
+  FOREIGN KEY (student_id) REFERENCES students(student_id),
+  FOREIGN KEY (class_id) REFERENCES classes(class_id)
+);
+
+-- Function to verify if a student is in the wrong class
+CREATE FUNCTION verify_student_class (student_id INT)
+RETURNS VARCHAR(100)
+BEGIN
+  DECLARE class_id INT;
+  DECLARE class_name VARCHAR(100);
+  DECLARE result VARCHAR(100);
+
+  SELECT class_id INTO class_id FROM students WHERE student_id = student_id;
+  SELECT class_name INTO class_name FROM classes WHERE class_id = class_id;
+
+  SET result = 
+    CASE
+      WHEN (SELECT COUNT(*) FROM attendance WHERE student_id = student_id AND class_id <> class_id) > 0
+      THEN CONCAT('Student ', student_id, ' is in the wrong class: ', class_name)
+      ELSE CONCAT('Student ', student_id, ' is in the correct class: ', class_name)
+    END;
+
+  RETURN result;
+END;
